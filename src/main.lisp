@@ -4,7 +4,32 @@
 (defpackage #:com.selwynsimsek.sat-lisp
   (:nicknames #:sat-lisp)
   (:use :cl)
-  (:shadowing-import-from #:metabang-bind #:bind))
+  (:shadowing-import-from #:metabang-bind #:bind)
+  (:export picosat
+           solve-cnf-file
+           mallob
+           minisat
+           cadical
+           example-callback-done
+           example-learn
+           example-terminate
+           ipasir-signature
+           incremental-sat-solver
+           variable-count
+           solver-pointer
+           *sat-solver*
+           symbol-table
+           solver-state
+           release-solver
+           add-literal
+           solve
+           check-sat
+           add-assumption
+           clause-not-terminated
+           model
+           invalid-solver-state
+           with-sat-solver
+           literal-value))
 (in-package :sat-lisp)
 
 ;;; Libraries
@@ -281,13 +306,14 @@ via mallob_ipasir_branched_solve ().
 
 (defun add-literal (literal &optional (solver *sat-solver*))
   "Adds a literal to the current clause. Calls %ipasir-add."
+  (assert (integerp literal))
   (bind (((:accessors solver-pointer solver-state added-literals) solver))
-        (unless (member solver-state (list :sat :unsat :input) :test 'eq)
-          (error "invalid solver state for ipasir-add ~a" solver-state))
-        (%ipasir-add solver-pointer literal)
-        (vector-push-extend literal added-literals)
-        (setf (variable-count solver) (max (variable-count solver) (abs literal)))
-        (setf solver-state :input)))
+    (unless (member solver-state (list :sat :unsat :input) :test 'eq)
+      (error "invalid solver state for ipasir-add ~a" solver-state))
+    (%ipasir-add solver-pointer literal)
+    (vector-push-extend literal added-literals)
+    (setf (variable-count solver) (max (variable-count solver) (abs literal)))
+    (setf solver-state :input)))
 
 (defun add-assumption (literal &optional (solver *sat-solver*))
   (bind (((:accessors solver-pointer solver-state) solver))
@@ -367,8 +393,8 @@ via mallob_ipasir_branched_solve ().
 (defun ipasir-set-seed (solver seed)
   (%ipasir-set-seed (solver-pointer solver) seed))
 
-(defun mallob-ipasir-init (solver boolean)
-  (%mallob-ipasir-init (solver-pointer solver) boolean))
+(defun mallob-ipasir-init (boolean)
+  (%mallob-ipasir-init boolean))
 
 (defun mallob-ipasir-branched-solve (solver terminate-callback callback-done-callback
                                      &key (data (cffi:null-pointer)))
@@ -387,29 +413,22 @@ via mallob_ipasir_branched_solve ().
      (unwind-protect (progn ,@body)
        (release-solver *sat-solver*))))
 
-;;; Exports
-
-(export '(picosat
-          mallob
-          minisat
-          cadical
-          example-callback-done
-          example-learn
-          example-terminate
-          ipasir-signature
-          incremental-sat-solver
-          variable-count
-          solver-pointer
-          *sat-solver*
-          symbol-table
-          solver-state
-          release-solver
-          add-literal
-          solve
-          check-sat
-          add-assumption
-          clause-not-terminated
-          model
-          invalid-solver-state
-          with-sat-solver
-          literal-value))
+(defun solve-cnf-file (cnf-pathname)
+  (with-open-file (stream cnf-pathname :direction :input)
+    (with-sat-solver
+      (loop do
+            (bind ((line (read-line stream nil stream)))
+              (when (eq line stream) (loop-finish))
+              (unless (zerop (length line))
+                (case (aref line 0)
+                  ((#\c #\p)          ; do nothing
+                   )
+                  (#\% (loop-finish))
+                  (t (with-input-from-string (stream line)
+                       (loop do
+                         (bind ((element (read stream nil stream)))
+                           (if (eq element stream)
+                               (loop-finish)
+                               (add-literal element))))))))))
+      (when (check-sat)
+        (model)))))
