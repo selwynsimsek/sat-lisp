@@ -15,6 +15,10 @@
 
 ;; put more libraries here
 
+(cffi:define-foreign-library mallob
+  (:unix (:or "libipasirmallob.so"))
+  (t (:default "libipasirmallob")))
+
 (cffi:define-foreign-library picosat
   (:unix (:or "libpicosat.so"))
   (t (:default "libpicosat")))
@@ -386,6 +390,9 @@ via mallob_ipasir_branched_solve ().
 ;;; Exports
 
 (export '(picosat
+          mallob
+          minisat
+          cadical
           example-callback-done
           example-learn
           example-terminate
