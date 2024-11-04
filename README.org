@@ -27,7 +27,7 @@ Consult the IPASIR docs for more detailed information.
   (sat-lisp:with-sat-solver
     (map nil #'sat-lisp:add-literal '(1 2 -3 0 -2 3 0)) ; (x ∨ y ∨ ¬z) ∧ (¬y ∨ z)
     (when (sat-lisp:check-sat)
-      (print (sat-lisp:model))))
+      (print (sat-lisp:model)))) ; => #*0000
 #+END_SRC
 
 sat-lisp is iterative.
