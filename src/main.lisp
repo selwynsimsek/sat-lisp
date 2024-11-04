@@ -13,6 +13,8 @@
          cffi:*foreign-library-directories*
          :test #'equal)
 
+;; put more libraries here
+
 (cffi:define-foreign-library picosat
   (:unix (:or "libpicosat.so"))
   (t (:default "libpicosat")))
