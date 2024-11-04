@@ -1,9 +1,31 @@
-* Sat-Lisp 
+* sat-lisp
+
+sat-lisp allows one to use incremental SAT solvers from Common Lisp with the [[https://github.com/biotomas/ipasir][IPASIR]] API.
+Several popular SAT solvers, such as CaDiCaL, MiniSat and PicoSAT are included, so you can get started right away.
 
 ** Usage
+sat-lisp takes as input a problem in conjunctive normal form (CNF).
+Literals are named by natural numbers.
+There is no need to define new literals explicitly - referring to them by number is enough.
+A negative number simply refers to the negation of the literal corresponding to the absolute value of that number.
+The function ~sat-lisp:add-literal~ adds a literal to the current clause.
+The special literal `0' is used to terminate a clause and optionally mark the start of a new one.
+Consult the IPASIR docs for more detailed information.
+
+#+BEGIN_SRC lisp
+  (sat-lisp:with-sat-solver
+    (map nil #'sat-lisp:add-literal '(1 2 -3 0 -2 3 0)) ; (x ∨ y ∨ ¬z) ∧ (¬y ∨ z)
+    (when (sat-lisp:check-sat)
+      (print (sat-lisp:model))))
+#+END_SRC
+
+sat-lisp is iterative - meaning that once a satisfying solution exists, more formulae can be added to the problem - that may depend on the model that is extracted.
+The solver can then be called again without losing the state of the solver.
 
 ** Installation
-
+#+BEGIN_SRC lisp
+  (ql:quickload :sat-lisp)
+#+END_SRC
 ** Author
 
 + Selwyn Simsek (selwyn.simsek@cantab.net)

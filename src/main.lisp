@@ -29,14 +29,14 @@
 
 (defvar *ipasir-library-name* nil)
 
-(defun load-ipasir (&optional (library-name 'picosat))
+(defun load-ipasir (&optional (library-name 'cadical))
   (assert (symbolp library-name))
   (when *ipasir-library-name*
     (cffi:close-foreign-library *ipasir-library-name*))
   (cffi:load-foreign-library library-name)
   (setf *ipasir-library-name* library-name))
 
-(defun ensure-ipasir-loaded (&optional (library-name 'picosat))
+(defun ensure-ipasir-loaded (&optional (library-name 'cadical))
   (unless (eq *ipasir-library-name* library-name) (load-ipasir library-name)))
 
 (ensure-ipasir-loaded 'cadical)
