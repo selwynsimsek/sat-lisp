@@ -239,7 +239,7 @@
 (defclass incremental-sat-solver ()
   ((solver-pointer :initarg :solver-pointer :accessor solver-pointer :initform nil)
    (symbol-table :initarg :symbol-table :accessor symbol-table :initform (make-hash-table :test 'equalp))
-   (variable-count :initarg :variable-count :accessor variable-count
+   (variable-count :initarg :variable-count :accessor variable-count :initform 0
                    :documentation "The number of variables so far input to the solver.")
    (added-literals :initarg :added-literals :accessor added-literals
                    :initform (make-array '(0) :element-type 'integer :adjustable t :fill-pointer 0)
@@ -269,51 +269,52 @@
     (%ipasir-release (solver-pointer solver))
     (setf (solver-pointer solver) nil (solver-state solver) nil)))
 
-(defun add-literal (solver literal)
+(defun add-literal (literal &optional (solver *sat-solver*))
   "Adds a literal to the current clause. Calls %ipasir-add."
   (bind (((:accessors solver-pointer solver-state added-literals) solver))
         (unless (member solver-state (list :sat :unsat :input) :test 'eq)
           (error "invalid solver state for ipasir-add ~a" solver-state))
         (%ipasir-add solver-pointer literal)
         (vector-push-extend literal added-literals)
-        (setf (n solver) (max (n solver) (abs literal)))
+        (setf (variable-count solver) (max (variable-count solver) (abs literal)))
         (setf solver-state :input)))
 
-(defun add-assumption (solver literal)
+(defun add-assumption (literal &optional (solver *sat-solver*))
   (bind (((:accessors solver-pointer solver-state) solver))
         (unless (member solver-state (list :sat :unsat :input) :test 'eq)
           (error "invalid solver state for ipasir-add ~a" solver-state))
         (%ipasir-assume solver-pointer literal)
         (setf solver-state :input)))
 
-(define-condition clause-not-terminated (condition)
+(define-condition clause-not-terminated (error)
   ((solver :initarg :solver :accessor solver)))
 
-(define-condition invalid-solver-state (condition)
+(define-condition invalid-solver-state (error)
   ((state :initarg :state :accessor state)
    (solver :initarg :solver :accessor solver)))
 
-(defun ipasir-solve (solver)
+(defun solve (&optional (solver *sat-solver*))
   (restart-case
       (bind (((:accessors solver-pointer solver-state added-literals) solver))
         (unless (member solver-state (list :sat :unsat :input) :test 'eq)
-          (signal 'invalid-solver-state :solver solver :state solver-state))
-        (unless (zerop (aref added-literals (1- (length added-literals))))
-          (signal 'clause-not-terminated :solver solver))
+          (error 'invalid-solver-state :solver solver :state solver-state))
+        (unless (zerop (length added-literals))
+          (unless (zerop (aref added-literals (1- (length added-literals))))
+            (error 'clause-not-terminated :solver solver)))
         (ecase (%ipasir-solve solver-pointer)
           (0 (setf solver-state :input))
           (10 (setf solver-state :sat))
           (20 (setf solver-state :unsat))))
     (terminate-clause ()
       :report "Terminate the current clause with a zero and try again."
-      (add-literal solver 0)
-      (ipasir-solve solver))))
+      (add-literal 0 solver)
+      (solve solver))))
 
 (defun literal-value (solver literal)
   (restart-case
       (bind (((:accessors solver-pointer solver-state) solver))
         (unless (eq solver-state :sat)
-          (signal 'invalid-solver-state :state solver-state :solver solver))
+          (error 'invalid-solver-state :state solver-state :solver solver))
         (let ((result (%ipasir-val solver-pointer literal)))
           (if (= result literal)
               t
@@ -324,22 +325,22 @@
                       (error "invalid result ~a" result))))))
     (solve-sat ()
       :report "Try solving the SAT problem and try again."
-      (ipasir-solve solver)
+      (solve solver)
       (literal-value solver literal))))
 
 (defun make-bit-vector (length &optional ones)
   (make-array (list length) :element-type 'bit :initial-element (if ones 1 0)))
 
-(defmethod ipasir-model ((solver incremental-sat-solver))
+(defun model (&optional (solver *sat-solver*))
   (let ((model (make-bit-vector (1+ (variable-count solver)))))
-    (loop for i from 1 below (variable-count solver) do
+    (loop for i from 1 upto (variable-count solver) do
           (setf (aref model i) (if (literal-value solver i) 1 0)))
     model))
 
 (defun ipasir-failed (solver literal)
   (bind (((:accessors solver-pointer solver-state) solver))
         (unless (eq solver-state :unsat)
-          (signal 'invalid-solver-state :solver solver :state solver-state))
+          (error 'invalid-solver-state :solver solver :state solver-state))
         (ecase (%ipasir-failed solver literal)
           (0 nil)
           (1 t))))
@@ -383,12 +384,14 @@
           incremental-sat-solver
           variable-count
           solver-pointer
+          *sat-solver*
           symbol-table
           solver-state
           release-solver
-          add-literal
+          add-literal solve
           add-assumption
           clause-not-terminated
+          model
           invalid-solver-state
           with-sat-solver
           literal-value))
