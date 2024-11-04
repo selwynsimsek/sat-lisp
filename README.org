@@ -17,6 +17,10 @@ The function ~sat-lisp:add-literal~ adds a literal to the current clause.
 
 The special literal `0' is used to terminate a clause and optionally mark the start of a new one.
 
+The function ~sat-lisp:check-sat~ tries to find a satisfying model and returns non-NIL if and only if one is found.
+
+The function ~sat-lisp:model~ extracts the model as a bit-vector. The model is one-indexed in order to maintain consistency with the naming of the literals.
+
 Consult the IPASIR docs for more detailed information.
 
 #+BEGIN_SRC lisp
