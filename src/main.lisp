@@ -19,6 +19,14 @@
   (:unix (:or "libpicosat.so"))
   (t (:default "libpicosat")))
 
+(cffi:define-foreign-library cadical
+  (:unix (:or "libcadical.so"))
+  (t (:default "libcadical")))
+
+(cffi:define-foreign-library minisat
+  (:unix (:or "libminisat.so"))
+  (t (:default "libminisat")))
+
 (defvar *ipasir-library-name* nil)
 
 (defun load-ipasir (&optional (library-name 'picosat))
@@ -31,7 +39,7 @@
 (defun ensure-ipasir-loaded (&optional (library-name 'picosat))
   (unless (eq *ipasir-library-name* library-name) (load-ipasir library-name)))
 
-(ensure-ipasir-loaded)
+(ensure-ipasir-loaded 'cadical)
 
 ;;; CFFI bindings
 
