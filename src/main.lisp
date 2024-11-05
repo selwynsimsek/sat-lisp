@@ -8,6 +8,7 @@
   (:export picosat
            solve-cnf-file
            mallob
+           init-solver
            minisat
            cadical
            example-callback-done
@@ -17,6 +18,7 @@
            incremental-sat-solver
            variable-count
            solver-pointer
+           added-literals
            *sat-solver*
            symbol-table
            solver-state
@@ -272,7 +274,8 @@ via mallob_ipasir_branched_solve ().
 (defun ipasir-signature () (cffi:foreign-string-to-lisp (%ipasir-signature)))
 
 (defclass incremental-sat-solver ()
-  ((solver-pointer :initarg :solver-pointer :accessor solver-pointer :initform nil)
+  ((solver-pointer :initarg :solver-pointer :accessor solver-pointer :initform nil
+                   :documentation "The IPASIR handle. Users should typically not have to deal with this.")
    (symbol-table :initarg :symbol-table :accessor symbol-table :initform (make-hash-table :test 'equalp))
    (variable-count :initarg :variable-count :accessor variable-count :initform 0
                    :documentation "The number of variables so far input to the solver.")
@@ -287,13 +290,15 @@ via mallob_ipasir_branched_solve ().
   (bind (((:accessors solver-pointer solver-state) object))
         (print-unreadable-object (object stream :type t :identity t)
           (format stream "~a ~a"
-                  (when solver-pointer
-                    (cffi:pointer-address solver-pointer))
+                  solver-pointer
                   solver-state))))
 
 (defmethod initialize-instance :after ((instance incremental-sat-solver)
                                        &rest initargs &key &allow-other-keys)
   (declare (ignore initargs))
+  (init-solver instance))
+
+(defun init-solver (instance)
   (let ((pointer (%ipasir-init)))
     (setf (solver-pointer instance) pointer
           (solver-state instance) :input)
