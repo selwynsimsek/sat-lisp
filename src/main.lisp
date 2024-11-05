@@ -307,7 +307,10 @@ via mallob_ipasir_branched_solve ().
 (defun release-solver (solver)
   (when (solver-pointer solver)
     (%ipasir-release (solver-pointer solver))
-    (setf (solver-pointer solver) nil (solver-state solver) nil)))
+    (setf (solver-pointer solver) nil
+          (solver-state solver) nil
+          (variable-count solver) 0
+          (added-literals solver) (make-array '(0) :element-type 'integer :adjustable t :fill-pointer 0))))
 
 (defun add-literal (literal &optional (solver *sat-solver*))
   "Adds a literal to the current clause. Calls %ipasir-add."
