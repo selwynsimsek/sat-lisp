@@ -300,7 +300,7 @@ via mallob_ipasir_branched_solve ().
     (format *debug-io* "Loaded IPASIR SAT solver: ~a~%" (ipasir-signature))))
 
 (defun release-solver (solver)
-  (unless (solver-pointer solver)
+  (when (solver-pointer solver)
     (%ipasir-release (solver-pointer solver))
     (setf (solver-pointer solver) nil (solver-state solver) nil)))
 
