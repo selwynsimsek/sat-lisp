@@ -312,7 +312,7 @@ via mallob_ipasir_branched_solve ().
           (variable-count solver) 0
           (added-literals solver) (make-array '(0) :element-type 'integer :adjustable t :fill-pointer 0))))
 
-(defun add-literal (literal &optional (solver *sat-solver*))
+(defun add-literal (literal &key (solver *sat-solver*))
   "Adds a literal to the current clause. Calls %ipasir-add."
   (assert (integerp literal))
   (bind (((:accessors solver-pointer solver-state added-literals) solver))
