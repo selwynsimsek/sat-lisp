@@ -70,6 +70,10 @@
 (defun ensure-ipasir-loaded (&optional (library-name 'cadical))
   (unless (eq *ipasir-library-name* library-name) (load-ipasir library-name)))
 
+#+sat-lisp-mallob
+(ensure-ipasir-loaded 'mallob)
+
+#-sat-lisp-mallob
 (ensure-ipasir-loaded 'cadical)
 
 ;;; CFFI bindings
