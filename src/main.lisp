@@ -60,21 +60,20 @@
 
 (defvar *ipasir-library-name* nil)
 
-(defun load-ipasir (&optional (library-name 'cadical))
+(defvar *default-library-name* (intern (string-upcase (or (uiop:getenv "SAT_LISP_SOLVER") "cadical"))
+                                       (find-package "COM.SELWYNSIMSEK.SAT-LISP")))
+
+(defun load-ipasir (&optional (library-name *default-library-name*))
   (assert (symbolp library-name))
   (when *ipasir-library-name*
     (cffi:close-foreign-library *ipasir-library-name*))
   (cffi:load-foreign-library library-name)
   (setf *ipasir-library-name* library-name))
 
-(defun ensure-ipasir-loaded (&optional (library-name 'cadical))
+(defun ensure-ipasir-loaded (&optional (library-name *default-library-name*))
   (unless (eq *ipasir-library-name* library-name) (load-ipasir library-name)))
 
-#+sat-lisp-mallob
-(ensure-ipasir-loaded 'mallob)
-
-#-sat-lisp-mallob
-(ensure-ipasir-loaded 'cadical)
+(ensure-ipasir-loaded)
 
 ;;; CFFI bindings
 

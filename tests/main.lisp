@@ -12,12 +12,33 @@
   (testing "should (= 1 1) to be true"
     (ok (= 1 1))))
 
+(deftest start-solver
+    (ok (with-sat-solver
+            (check-sat))))
+
+(deftest unsat
+    (ok (not (with-sat-solver (add-literal 1)
+               (add-literal 0)
+               (add-literal -1)
+               (add-literal 0)
+               (check-sat)))))
+
+;; (deftest de-morgan
+;;   (ok (not (with-sat-solver
+;;              (add-literal 1)
+;;              (add-literal -2)
+;;              (add-literal 0)
+;;              (add-literal 2)
+;;              (add-literal -1)
+;;              (add-literal 0)
+;;              (check-sat)))))
+
 (deftest uf20-91
-  (testing "testing uniform random 3-sat"
-           (ok (loop for file in
-                              (uiop:directory-files
-                               (asdf:system-relative-pathname :sat-lisp #p"tests/uf20-91/"))
-                     always (let ((*debug-io* (make-string-output-stream))) (solve-cnf-file file))))))
+    (testing "testing uniform random 3-sat"
+             (ok (loop for file in
+                                (uiop:directory-files
+                                 (asdf:system-relative-pathname :sat-lisp #p"tests/uf20-91/"))
+                       always (let ((*debug-io* (make-string-output-stream))) (solve-cnf-file file))))))
 
 
 (deftest bf
@@ -34,3 +55,21 @@
                        (uiop:directory-files
                         (asdf:system-relative-pathname :sat-lisp #p"tests/dubois/"))
               never (let ((*debug-io* (make-string-output-stream))) (solve-cnf-file file))))))
+
+(deftest incremental
+    (ok
+     (loop repeat 10 always
+       (with-sat-solver
+           (add-literal 1)
+         (add-literal 2)
+         (add-literal 0)
+         (check-sat)
+         (add-literal 3)
+         (add-literal -2)
+         (add-literal 0)
+         (check-sat)
+         (add-literal 5)
+         (add-literal 4 )
+         (add-literal 1)
+         (add-literal 0)
+         (check-sat)))))
