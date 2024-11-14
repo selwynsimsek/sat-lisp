@@ -73,3 +73,18 @@
          (add-literal 1)
          (add-literal 0)
          (check-sat)))))
+
+(deftest incremental-2
+  (ok
+   (loop repeat 10 always
+                   (with-sat-solver
+                       (mapcar #'add-literal (list 5 0 2 4 0 1 0))
+                     (check-sat)
+                     (assert (= (length (model)) 6))
+                     (mapcar #'add-literal (list 3 7 -8 0 20 0))
+                     (check-sat)
+                     (assert (= (length (model)) 21))
+                     (mapcar #'add-literal (list -2 0 49 50 0))
+                     (prog1
+                         (check-sat)
+                       (assert (= (length (model)) 51)))))))
