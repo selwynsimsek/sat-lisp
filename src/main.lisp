@@ -32,7 +32,7 @@
            invalid-solver-state
            with-sat-solver
            literal-value))
-(in-package :sat-lisp)
+(in-package #:sat-lisp)
 
 ;;; CFFI bindings
 
@@ -316,7 +316,7 @@ via mallob_ipasir_branched_solve ().
           (20 (setf solver-state :unsat))))
     (terminate-clause ()
       :report "Terminate the current clause with a zero and try again."
-      (add-literal 0 solver)
+      (add-literal 0 :solver solver)
       (solve solver))))
 
 (defun literal-value (solver literal)

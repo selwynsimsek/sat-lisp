@@ -35,8 +35,6 @@ sat-lisp is iterative.
 This means that once a satisfying solution exists, more formulae can be added to the problem.
 
 The solver can then be called again without losing the state of the solver, which allows the solver to make use of previously derived knowledge to solve the new problem.
-
-Set the environment variable ~SAT_LISP_SOLVER~ to one of ~mallob~, ~picosat~, ~ipasir~ or ~cadical~ to set the SAT solver used.
 ** Installation
 #+BEGIN_SRC lisp
   (ql:quickload :sat-lisp)
