@@ -2,7 +2,7 @@
 
 sat-lisp allows one to use incremental SAT solvers from Common Lisp with the [[https://github.com/biotomas/ipasir][IPASIR]] API.
 
-Several popular SAT solvers, such as CaDiCaL, MiniSat and PicoSAT are included, so you can get started right away.
+A SAT solver that implements the IPASIR API, such as CaDiCaL, MiniSat, PicoSAT or mallob, must be loaded into the image as a shared library using CFFI prior to loading ~sat-lisp~.
 
 ** Usage
 sat-lisp takes as input a problem in conjunctive normal form (CNF).

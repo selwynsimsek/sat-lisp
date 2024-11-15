@@ -34,47 +34,6 @@
            literal-value))
 (in-package :sat-lisp)
 
-;;; Libraries
-
-(pushnew '(asdf:system-relative-pathname :sat-lisp #p"lib/")
-         cffi:*foreign-library-directories*
-         :test #'equal)
-
-;; put more libraries here
-
-(cffi:define-foreign-library mallob
-  (:unix (:or "libipasirmallob.so"))
-  (t (:default "libipasirmallob")))
-
-(cffi:define-foreign-library picosat
-  (:unix (:or "libpicosat.so"))
-  (t (:default "libpicosat")))
-
-(cffi:define-foreign-library cadical
-  (:unix (:or "libcadical.so"))
-  (t (:default "libcadical")))
-
-(cffi:define-foreign-library minisat
-  (:unix (:or "libminisat.so"))
-  (t (:default "libminisat")))
-
-(defvar *ipasir-library-name* nil)
-
-(defvar *default-library-name* (intern (string-upcase (or (uiop:getenv "SAT_LISP_SOLVER") "cadical"))
-                                       (find-package "COM.SELWYNSIMSEK.SAT-LISP")))
-
-(defun load-ipasir (&optional (library-name *default-library-name*))
-  (assert (symbolp library-name))
-  (when *ipasir-library-name*
-    (cffi:close-foreign-library *ipasir-library-name*))
-  (cffi:load-foreign-library library-name)
-  (setf *ipasir-library-name* library-name))
-
-(defun ensure-ipasir-loaded (&optional (library-name *default-library-name*))
-  (unless (eq *ipasir-library-name* library-name) (load-ipasir library-name)))
-
-(ensure-ipasir-loaded)
-
 ;;; CFFI bindings
 
 (cffi:defcfun (%ipasir-signature "ipasir_signature") (:pointer :char)
